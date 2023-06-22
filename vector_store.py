@@ -33,8 +33,6 @@ pinecone.init(
     )
 
 
-
-
 tokenizer = tiktoken.get_encoding('p50k_base')
 
 # create the length function
@@ -46,10 +44,10 @@ def tiktoken_len(text):
     return len(tokens)
 
 # create the embedding model
-embed = OpenAIEmbeddings(openai_api_key=openai_api_key, chunk_size=1)
 
-def embed_upsert(data, filename, business_name, industry, index_name="langchain-demo"): #add data later
-       
+
+def embed_upsert(filename, business_name, industry, index_name="langchain-demo-1536"): #add data later
+    embed = OpenAIEmbeddings(openai_api_key=openai_api_key, chunk_size=1)   
     # Open the document in read mode
     with open(filename, 'r') as file:
     # Read the contents of the document into a string
@@ -82,7 +80,7 @@ def embed_upsert(data, filename, business_name, industry, index_name="langchain-
         }
         #if len(texts) >= batch_limit: Include a batch limit for large file sizes
         # now we create chunks from the record text
-        record_texts = text_splitter.split_text(doc_string)
+        record_texts = text_splitter.split_text(str(doc_string))
         # create individual metadata dicts for each chunk
         record_metadatas = [{
             "chunk": j, "text": text, **metadata
@@ -94,11 +92,12 @@ def embed_upsert(data, filename, business_name, industry, index_name="langchain-
         # if we have reached the batch_limit we can add texts
     
         idx = [str(uuid4()) for _ in range(len(texts))]
+        print(f"Processing vector {i}/{len(texts)}")
         embeds = embed.embed_documents(texts)    
         index.upsert(vectors=zip(idx, embeds, metadatas), namespace="business") #add back idx
         texts = []
         metadatas = []
-        
+
 
     
 
